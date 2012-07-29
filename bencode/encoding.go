@@ -62,3 +62,8 @@ func (self Dict) Encode() string {
 	result += "e"
 	return result
 }
+
+// Wrapper function for a more consistent interface.
+func Encode(data Interface) string {
+	return data.Encode()
+}
