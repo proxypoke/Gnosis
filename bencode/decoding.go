@@ -25,16 +25,16 @@ func NewDecoder(stream []byte) *Decoder {
 }
 
 // Decode an integer from a stream.
-func DecodeInt(stream []byte) (int64, error) {
+func DecodeInt(stream []byte) (Int, error) {
 	return NewDecoder(stream).decodeInt()
 }
 
 // Decode a string from a stream.
-func DecodeString(stream []byte) (string, error) {
+func DecodeString(stream []byte) (String, error) {
 	return NewDecoder(stream).decodeString()
 }
 
-func (self *Decoder) decodeInt() (result int64, err error) {
+func (self *Decoder) decodeInt() (result Int, err error) {
 	if self.stream[self.pos] != 'i' {
 		err = DecodeError("Cannot decode int: doesn't start with 'i'.")
 		return
@@ -84,14 +84,15 @@ func (self *Decoder) decodeInt() (result int64, err error) {
 	}
 
 	str := string(self.stream[self.pos+1 : i])
-	result, err = strconv.ParseInt(str, 10, 64)
+	x, err := strconv.ParseInt(str, 10, 64)
 	if err == nil {
 		self.pos = i + 1
+		result = Int(x)
 	}
 	return
 }
 
-func (self *Decoder) decodeString() (result string, err error) {
+func (self *Decoder) decodeString() (result String, err error) {
 	i := self.pos
 	for {
 		c := self.stream[i]
@@ -118,8 +119,8 @@ func (self *Decoder) decodeString() (result string, err error) {
 		return
 	}
 
-	str := string(self.stream[self.pos:i])
-	length, err := strconv.ParseInt(str, 10, 64)
+	lenstr := string(self.stream[self.pos:i])
+	length, err := strconv.ParseInt(lenstr, 10, 64)
 	if err != nil {
 		return
 	}
@@ -139,6 +140,6 @@ func (self *Decoder) decodeString() (result string, err error) {
 		i++
 	}
 
-	result = string(chars)
+	result = String(chars)
 	return
 }

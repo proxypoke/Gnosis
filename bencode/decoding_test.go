@@ -17,9 +17,9 @@ func TestIntDecode(t *testing.T) {
 		negative []byte = []byte("i-1234567890e")
 		zero     []byte = []byte("i0e")
 		// check values
-		pos_check  int64 = 1234567890
-		neg_check  int64 = -1234567890
-		zero_check int64 = 0
+		pos_check  Int = 1234567890
+		neg_check  Int = -1234567890
+		zero_check Int = 0
 		// invalid streams
 		no_starting_i []byte = []byte("x12345667890e")
 		leading_zero  []byte = []byte("i000000e")
@@ -33,7 +33,7 @@ func TestIntDecode(t *testing.T) {
 		negative,
 		zero,
 	}
-	check := []int64{
+	check := []Int{
 		pos_check,
 		neg_check,
 		zero_check,
@@ -70,7 +70,7 @@ func TestStringDecode(t *testing.T) {
 		[]byte("6:foobar"),
 		[]byte("0:"),
 	}
-	check := []string{
+	check := []String{
 		"foobar",
 		"",
 	}
