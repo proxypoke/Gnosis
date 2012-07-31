@@ -29,6 +29,11 @@ func DecodeInt(stream []byte) (int64, error) {
 	return NewDecoder(stream).decodeInt()
 }
 
+// Decode a string from a stream.
+func DecodeString(stream []byte) (string, error) {
+	return NewDecoder(stream).decodeString()
+}
+
 func (self *Decoder) decodeInt() (result int64, err error) {
 	if self.stream[self.pos] != 'i' {
 		err = DecodeError("Cannot decode int: doesn't start with 'i'.")
@@ -72,7 +77,7 @@ func (self *Decoder) decodeInt() (result int64, err error) {
 
 		i++
 		if i >= len(self.stream) {
-			err = DecodeError("Cannot decode string: reached end of stream " +
+			err = DecodeError("Cannot decode int: reached end of stream " +
 				"before 'e' was found.")
 			return
 		}
@@ -83,5 +88,57 @@ func (self *Decoder) decodeInt() (result int64, err error) {
 	if err == nil {
 		self.pos = i + 1
 	}
+	return
+}
+
+func (self *Decoder) decodeString() (result string, err error) {
+	i := self.pos
+	for {
+		c := self.stream[i]
+
+		if c == ':' {
+			break
+		}
+		if c < '0' || c > '9' {
+			err = DecodeError(
+				"Cannot decode string: invalid characters in length.")
+			return
+		}
+		i++
+		if i >= len(self.stream) {
+			err = DecodeError("Cannot decode string: reached end of stream " +
+				"before ':' was found.")
+			return
+		}
+	}
+
+	// Check if there have been any numbers at all.
+	if i == self.pos {
+		err = DecodeError("Cannot decode string: no length found.")
+		return
+	}
+
+	str := string(self.stream[self.pos:i])
+	length, err := strconv.ParseInt(str, 10, 64)
+	if err != nil {
+		return
+	}
+
+	i++
+	var chars []byte
+	for {
+		if length == 0 {
+			break
+		}
+		if i >= len(self.stream) {
+			err = DecodeError("Cannot decode string: too short.")
+			return
+		}
+		chars = append(chars, self.stream[i])
+		length--
+		i++
+	}
+
+	result = string(chars)
 	return
 }

@@ -25,21 +25,26 @@ func TestIntDecode(t *testing.T) {
 		leading_zero  []byte = []byte("i000000e")
 		negative_zero []byte = []byte("i-0e")
 		invalid_chars []byte = []byte("ifoobare")
+		too_short     []byte = []byte("i1234")
 	)
 
 	valid := [][]byte{
 		positive,
 		negative,
-		zero}
+		zero,
+	}
 	check := []int64{
 		pos_check,
 		neg_check,
-		zero_check}
+		zero_check,
+	}
 	invalid := [][]byte{
 		no_starting_i,
 		leading_zero,
 		negative_zero,
-		invalid_chars}
+		invalid_chars,
+		too_short,
+	}
 
 	for i, stream := range valid {
 		result, err := DecodeInt(stream)
@@ -58,4 +63,41 @@ func TestIntDecode(t *testing.T) {
 			t.Errorf("Didn't error on invalid stream: %s", stream)
 		}
 	}
+}
+
+func TestStringDecode(t *testing.T) {
+	valid := [][]byte{
+		[]byte("6:foobar"),
+		[]byte("0:"),
+	}
+	check := []string{
+		"foobar",
+		"",
+	}
+
+	invalid := [][]byte{
+		// No length
+		[]byte(":dungoofd"),
+		// Too short
+		[]byte("9001:overninethousand...not"),
+	}
+
+	for i, stream := range valid {
+		result, err := DecodeString(stream)
+		if err != nil {
+			t.Errorf("Couldn't decode valid stream: %s", stream)
+		}
+		if check[i] != result {
+			t.Errorf("Result (%#v) doesn't match expected value (%#v)",
+				result, check[i])
+		}
+	}
+
+	for _, stream := range invalid {
+		_, err := DecodeString(stream)
+		if err == nil {
+			t.Errorf("Didn't error on invalid stream: %s", stream)
+		}
+	}
+
 }
