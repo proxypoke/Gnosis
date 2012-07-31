@@ -13,7 +13,7 @@ import (
 	"testing"
 )
 
-func TestString(t *testing.T) {
+func TestStringEncode(t *testing.T) {
 	str := String("foobar")
 	bstr := Encode(str)
 	expected := []byte("6:foobar")
@@ -23,7 +23,7 @@ func TestString(t *testing.T) {
 	}
 }
 
-func TestInt(t *testing.T) {
+func TestIntEncode(t *testing.T) {
 	var i Int
 	// test a negative (-1) and positive (1) number as well as zero
 	for i = -1; i <= 1; i++ {
@@ -36,7 +36,7 @@ func TestInt(t *testing.T) {
 	}
 }
 
-func TestList(t *testing.T) {
+func TestListEncode(t *testing.T) {
 	var list List
 	expected := []byte("l")
 
@@ -59,7 +59,7 @@ func TestList(t *testing.T) {
 	}
 }
 
-func TestDict(t *testing.T) {
+func TestDictEncode(t *testing.T) {
 	dict := make(Dict)
 	expected := []byte("d")
 
