@@ -25,7 +25,7 @@ func (self String) Encode() []byte {
 }
 
 // Bencode type for an int
-type Int int
+type Int int64
 
 func (self Int) Encode() []byte {
 	result := fmt.Sprintf("i%de", self)
