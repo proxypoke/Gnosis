@@ -15,8 +15,13 @@ type Interface interface {
 	Encode() []byte
 }
 
-// Bencode type for a string.
-type String string
+// Bencode types for the various data structures.
+type (
+	String string
+	Int    int64
+	List   []Interface
+	Dict   map[String]Interface
+)
 
 func (self String) Encode() []byte {
 	length := len(self)
@@ -24,16 +29,10 @@ func (self String) Encode() []byte {
 	return []byte(result)
 }
 
-// Bencode type for an int
-type Int int64
-
 func (self Int) Encode() []byte {
 	result := fmt.Sprintf("i%de", self)
 	return []byte(result)
 }
-
-// Bencode type for a list
-type List []Interface
 
 func (self List) Encode() []byte {
 	result := []byte("l")
@@ -43,9 +42,6 @@ func (self List) Encode() []byte {
 	result = append(result, 'e')
 	return result
 }
-
-// Bencode type for a dict
-type Dict map[String]Interface
 
 func (self Dict) Encode() []byte {
 	// keys must be in lexiographic order
