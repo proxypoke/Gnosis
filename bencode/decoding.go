@@ -9,6 +9,38 @@ import (
 	"strconv"
 )
 
+// Constant identifiers for the various Bencode structures.
+const (
+	INVALID = iota
+	INT
+	STRING
+	LIST
+	DICT
+)
+
+// Get the type of the stream. Returns one of the above identifiers.
+func GetType(stream []byte) (type_ int) {
+	if len(stream) < 1 {
+		type_ = INVALID
+	}
+
+	switch c := stream[0]; {
+	default:
+		type_ = INVALID
+	case c >= '0' || c <= '9':
+		type_ = STRING
+	case c == 'i':
+		type_ = INT
+	case c == 'l':
+		type_ = LIST
+	case c == 'd':
+		type_ =  DICT
+	}
+	return
+}
+
+// ================================ [ DECODER ] ================================
+
 type DecodeError string
 
 func (self DecodeError) Error() string {
@@ -33,6 +65,8 @@ func DecodeInt(stream []byte) (Int, error) {
 func DecodeString(stream []byte) (String, error) {
 	return NewDecoder(stream).decodeString()
 }
+
+// ============================ [ DECODER METHODS ] ============================
 
 func (self *Decoder) decodeInt() (result Int, err error) {
 	if self.stream[self.pos] != 'i' {
@@ -100,7 +134,7 @@ func (self *Decoder) decodeString() (result String, err error) {
 		if c == ':' {
 			break
 		}
-		if c < '0' || c > '9' {
+		if !isNum(c) {
 			err = DecodeError(
 				"Cannot decode string: invalid characters in length.")
 			return
@@ -142,4 +176,14 @@ func (self *Decoder) decodeString() (result String, err error) {
 
 	result = String(chars)
 	return
+}
+
+// =========================== [ HELPER FUNCTIONS ] ============================
+
+// Check if a byte represents an ASCII number.
+func isNum(b byte) bool {
+	if b < '0' || b > '9' {
+		return false
+	}
+	return true
 }
