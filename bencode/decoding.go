@@ -37,8 +37,14 @@ type Decoder struct {
 	pos    int
 }
 
+// Construct a Decoder for a given stream.
 func NewDecoder(stream []byte) *Decoder {
 	return &Decoder{stream, 0}
+}
+
+// Decode a stream.
+func Decode(stream []byte) (Interface, error) {
+	return NewDecoder(stream).decodeNext()
 }
 
 // Decode an integer from a stream.
