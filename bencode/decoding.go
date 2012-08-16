@@ -56,6 +56,11 @@ func DecodeList(stream []byte) (List, error) {
 	return NewDecoder(stream).decodeList()
 }
 
+// Decode a dict from a stream.
+func DecodeDict(stream []byte) (Dict, error) {
+	return NewDecoder(stream).decodeDict()
+}
+
 // ============================ [ DECODER METHODS ] ============================
 
 // Internal getType method.
@@ -90,6 +95,8 @@ func (self *Decoder) decodeNext() (result Interface, err error) {
 		result, err = self.decodeString()
 	case t == LIST:
 		result, err = self.decodeList()
+	case t == DICT:
+		result, err = self.decodeDict()
 	default:
 		err = DecodeError("Cannot decode stream: invalid characters.")
 	}
@@ -236,12 +243,54 @@ func (self *Decoder) decodeList() (result List, err error) {
 			return
 		}
 		result = append(result, obj)
-
 	}
 
 	if err == nil {
 		self.pos++
 	}
+	return
+}
+
+func (self *Decoder) decodeDict() (result Dict, err error) {
+	if self.getType() != DICT {
+		err = DecodeError("Cannot decode dict: doesn't start with 'd'.")
+		return
+	}
+
+	// Create empty dict
+	result = Dict{}
+
+	self.pos++
+	for {
+		if self.pos >= len(self.stream) {
+			err = DecodeError("Cannot decode dict: reached end of stream " +
+				"before terminating 'e' was found.")
+			return
+		}
+		if self.stream[self.pos] == 'e' {
+			break
+		}
+
+		var str String
+		str, err = self.decodeString()
+		if err != nil {
+			return
+		}
+
+		var obj Interface
+		obj, err = self.decodeNext()
+		if err != nil {
+			return
+		}
+
+		result[str] = obj
+	}
+
+	if err == nil {
+		self.pos++
+	}
+	return
+
 	return
 }
 

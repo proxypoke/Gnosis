@@ -105,11 +105,12 @@ func TestStringDecode(t *testing.T) {
 func TestListDecode(t *testing.T) {
 	// TODO: Add dicts once they are implemented.
 	valid := [][]byte{
-		[]byte("le"),            // empty list
-		[]byte("l3:fooe"),       // list containing a string
-		[]byte("li42ee"),        // list containing an int
-		[]byte("llee"),          // list containing another list
-		[]byte("l3:fooi42elee"), // comination of all of the above
+		[]byte("le"),              // empty list
+		[]byte("l3:fooe"),         // list containing a string
+		[]byte("li42ee"),          // list containing an int
+		[]byte("llee"),            // list containing another list
+		[]byte("ldee"),            // list containing a dict
+		[]byte("l3:fooi42eledee"), // combination of all of the above
 	}
 	/*
 		// It's not possible to (trivially) compare slices, so we'll skip
@@ -163,4 +164,37 @@ func TestListDecode(t *testing.T) {
 		}
 	}
 
+}
+
+func TestDictDecode(t *testing.T) {
+	valid := [][]byte{
+		[]byte("de"),              // empty dict
+		[]byte("d3:inti42ee"),     // dict containing an int
+		[]byte("d6:string3:fooe"), // dict containing a string
+		[]byte("d4:listlee"),      // dict containing a list
+		[]byte("d4:dictdee"),      // dict containing a dict
+		// all of the above
+		[]byte("d3:inti42e6:string3:foo4:listle4:dictdee"),
+	}
+
+	invalid := [][]byte{
+		[]byte("d"),       // unterminated dict
+		[]byte("d3:bare"), // key, but no value
+		[]byte("di42ee"),  // invalid key
+	}
+
+	for _, stream := range valid {
+		_, err := DecodeDict(stream)
+		if err != nil {
+			t.Errorf("Couldn't decode valid stream: %s", stream)
+			t.Errorf("%#v", err)
+		}
+	}
+
+	for _, stream := range invalid {
+		_, err := DecodeDict(stream)
+		if err == nil {
+			t.Errorf("Didn't error on invalid stream: %s", stream)
+		}
+	}
 }
