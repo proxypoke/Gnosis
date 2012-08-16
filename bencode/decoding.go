@@ -16,27 +16,12 @@ const (
 	STRING
 	LIST
 	DICT
+	TERMINATOR // termination character for int, list and dict ('e')
 )
 
 // Get the type of the stream. Returns one of the above identifiers.
 func GetType(stream []byte) (type_ int) {
-	if len(stream) < 1 {
-		type_ = INVALID
-	}
-
-	switch c := stream[0]; {
-	default:
-		type_ = INVALID
-	case c >= '0' || c <= '9':
-		type_ = STRING
-	case c == 'i':
-		type_ = INT
-	case c == 'l':
-		type_ = LIST
-	case c == 'd':
-		type_ =  DICT
-	}
-	return
+	return NewDecoder(stream).getType()
 }
 
 // ================================ [ DECODER ] ================================
@@ -66,10 +51,54 @@ func DecodeString(stream []byte) (String, error) {
 	return NewDecoder(stream).decodeString()
 }
 
+// Decode a list from a stream.
+func DecodeList(stream []byte) (List, error) {
+	return NewDecoder(stream).decodeList()
+}
+
 // ============================ [ DECODER METHODS ] ============================
 
+// Internal getType method.
+func (self *Decoder) getType() (type_ int) {
+	if self.pos > len(self.stream) {
+		type_ = INVALID
+	}
+	switch c := self.stream[self.pos]; {
+	default:
+		type_ = INVALID
+	case c >= '0' && c <= '9':
+		type_ = STRING
+	case c == 'i':
+		type_ = INT
+	case c == 'l':
+		type_ = LIST
+	case c == 'd':
+		type_ = DICT
+	case c == 'e':
+		type_ = TERMINATOR
+	}
+	return
+}
+
+// Internal method for getting the next decodable object.
+// TODO: Add dicts once they are implemented.
+func (self *Decoder) decodeNext() (result Interface, err error) {
+	switch t := self.getType(); {
+	case t == INT:
+		result, err = self.decodeInt()
+	case t == STRING:
+		result, err = self.decodeString()
+	case t == LIST:
+		result, err = self.decodeList()
+	default:
+		err = DecodeError("Cannot decode stream: invalid characters.")
+	}
+	return
+}
+
+// Internal decoder method for ints.
 func (self *Decoder) decodeInt() (result Int, err error) {
-	if self.stream[self.pos] != 'i' {
+	if self.getType() != INT {
 		err = DecodeError("Cannot decode int: doesn't start with 'i'.")
 		return
 	}
@@ -126,6 +155,7 @@ func (self *Decoder) decodeInt() (result Int, err error) {
 	return
 }
 
+// Internal decoding method for Strings.
 func (self *Decoder) decodeString() (result String, err error) {
 	i := self.pos
 	for {
@@ -175,6 +205,43 @@ func (self *Decoder) decodeString() (result String, err error) {
 	}
 
 	result = String(chars)
+	self.pos = i
+	return
+}
+
+// Internal decoding method for lists.
+func (self *Decoder) decodeList() (result List, err error) {
+	if self.getType() != LIST {
+		err = DecodeError("Cannot decode list: doesn't start with 'l'.")
+		return
+	}
+
+	// Just the nil element is a list containing nil, which isn't what we want.
+	result = List{}
+
+	self.pos++
+	for {
+		if self.pos >= len(self.stream) {
+			err = DecodeError("Cannot decode list: reached end of stream " +
+				"before terminating 'e' was found.")
+			return
+		}
+		if self.stream[self.pos] == 'e' {
+			break
+		}
+
+		var obj Interface
+		obj, err = self.decodeNext()
+		if err != nil {
+			return
+		}
+		result = append(result, obj)
+
+	}
+
+	if err == nil {
+		self.pos++
+	}
 	return
 }
 

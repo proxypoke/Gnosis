@@ -101,3 +101,66 @@ func TestStringDecode(t *testing.T) {
 	}
 
 }
+
+func TestListDecode(t *testing.T) {
+	// TODO: Add dicts once they are implemented.
+	valid := [][]byte{
+		[]byte("le"),            // empty list
+		[]byte("l3:fooe"),       // list containing a string
+		[]byte("li42ee"),        // list containing an int
+		[]byte("llee"),          // list containing another list
+		[]byte("l3:fooi42elee"), // comination of all of the above
+	}
+	/*
+		// It's not possible to (trivially) compare slices, so we'll skip
+		// checks.
+		check := []List{
+			List{},
+			List{String("foo")},
+			List{Int(42)},
+			List{List{}},
+			List{String("Foo"), Int(42), List{}},
+		}
+	*/
+
+	invalid := [][]byte{
+		[]byte("l"), // unterminated list
+	}
+
+	//for i, stream := range valid {
+	for _, stream := range valid {
+		//result, err := DecodeList(stream)
+		_, err := DecodeList(stream)
+		if err != nil {
+			t.Errorf("Couldn't decode valid stream: %s", stream)
+			t.Errorf("%#v", err)
+		}
+		/*
+			// Catch panics when one of the results doesn't have enough or too
+			// many elements.
+			defer func() {
+				if err := recover(); err != nil {
+					t.Error("Encountered panic while comparing result to",
+						"expected value. The result either had not enough",
+						"or too many elements.")
+					t.Logf("%#v", err)
+				}
+			}()
+
+			for j, value := range check[i] {
+				if value != result[j] {
+					t.Errorf("Result (%#v) doesn't match expected value (%#v)",
+						result, check[i])
+				}
+			}
+		*/
+	}
+
+	for _, stream := range invalid {
+		_, err := DecodeList(stream)
+		if err == nil {
+			t.Errorf("Didn't error on invalid stream: %s", stream)
+		}
+	}
+
+}
